@@ -24,7 +24,7 @@ El **robot seguidor de línea** es un sistema mecatrónico que combina **electr�
 | LED indicador (opcional) | 1 | Señal visual de funcionamiento |
 
 
-## Que encontrarás en este repositorio?
+## 📖 Que encontrarás en este repositorio?
 
 En este repositorio encontrarás 2 tipos de programación para el robot 4WD Mecanum Robot Car.
 

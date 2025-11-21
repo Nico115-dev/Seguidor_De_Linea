@@ -91,7 +91,7 @@ def avoid_obstacle():
 # PROGRAMA PRINCIPAL
 # ===============================
 
-display.scroll("MECANUM AUTO")
+display.scroll("SEGUIDOR DE LINEA")
 music.play(music.POWER_UP)
 
 while True:

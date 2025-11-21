@@ -1,171 +1,55 @@
 from microbit import *
-import music
-import time
-import mecanumRobotV2
+from keyes_mecanum_Car_V2 import *
+mecanumCar = Mecanum_Car_Driver_V2()
+display.off()
 
-// ===============================
-// CONFIGURACIÓN DE SENSORES
-// ===============================
+val_L = 0
+val_C = 0
+val_R = 0
 
-// # Sensores de línea (DIGITALES)
-left_sensor = pin3
-right_sensor = pin10
-
-# Sensor ultrasónico HC-SR04
-trig = pin1
-echo = pin2
-
-
-// ===============================
-// FUNCIÓN: LEER DISTANCIA
-// ===============================
-
-def read_distance():
-    """
-    Devuelve distancia en cm.
-    Retorna 999 si no logra medir.
-    """
-    trig.write_digital(0)
-    time.sleep_us(5)
-    trig.write_digital(1)
-    time.sleep_us(10)
-    trig.write_digital(0)
-
-    start = time.ticks_us()
-    timeout = start + 30000
-
-    while echo.read_digital() == 0:
-        if time.ticks_us() > timeout:
-            return 999
-
-    start = time.ticks_us()
-
-    while echo.read_digital() == 1:
-        if time.ticks_us() > timeout:
-            return 999
-
-    end = time.ticks_us()
-    duration = end - start
-
-    return int(duration / 58)
-
-
-// ===============================
-// MOVIMIENTOS
-// ===============================
-
-def stop():
-    mecanumRobotV2.CarStop()
-
-def forward():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_FORWARD)
-
-def backward():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_BACK)
-
-def turn_left():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_LEFT)
-
-def turn_right():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_RIGHT)
-
-
-// ===============================
-// EVASIÓN DE OBSTÁCULOS
-// ===============================
-
-def avoid_obstacle():
-    stop()
-    sleep(200)
-
-    backward()
-    sleep(400)
-
-    turn_left()
-    sleep(350)
-
-    stop()
-
-
-// ===============================
-// Recuperar línea
-// ===============================
-
-def line_recovery():
-    // Mostrar que está buscando línea
-    mecanumRobotV2.CarRunSpeed(mecanumRobotV2.RunState.RUN_LEFT, 40)
-    sleep(200)
-    // ¿Encontró la línea al girar?
-    if left_sensor.read_digital() == 0 or right_sensor.read_digital() == 0:
-        display.show(Image.HAPPY)
-        return
-
-    // Gira hacia el otro lado si no encontró nada
-    mecanumRobotV2.CarRunSpeed(mecanumRobotV2.RunState.RUN_RIGHT, 40)
-    sleep(200)
-
-
-// ===============================
-// Control proporcional
-// ===============================
-
-def follow_line_proportional():
-    left_val = left_sensor.read_digital()
-    right_val = right_sensor.read_digital()
-
-    // negro = 0 (línea)
-    // blanco = 1 (fuera)
-
-    // Detecta pérdida total
-    if left_val == 1 and right_val == 1:
-        return line_recovery()
-
-    //  Error proporcional
-    if left_val == 0 and right_val == 1:
-        error = -1      # mover hacia la izquierda
-    elif left_val == 1 and right_val == 0:
-        error = +1      # mover hacia la derecha
-    else:
-        error = 0       # centro perfecto
-
-    // Control De Velocidad
-    base_speed = 60     # velocidad base
-    kp = 35             # ganancia proporcional
-
-    correction = kp * error
-
-    left_speed = base_speed - correction
-    right_speed = base_speed + correction
-
-    // Limitar valores (0 – 100)
-    left_speed = max(0, min(100, left_speed))
-    right_speed = max(0, min(100, right_speed))
-
-    // Movimiento proporcional
-    mecanumRobotV2.CarRunSpeed(
-        mecanumRobotV2.RunState.RUN_FORWARD,
-        left_speed,
-        right_speed
-    )
-
-
-// ===============================
-// PROGRAMA PRINCIPAL
-// ===============================
-
-display.scroll("SEGUIDOR DE LINEA")
-music.play(music.POWER_UP)
+Sch1 = Image("00900:""09090:""90009:""09090:""00900:")
+Sch2 = Image("00000:""00900:""09990:""00900:""00000:")
 
 while True:
+    val_L = pin3.read_digital()
+    val_C = pin4.read_digital()
+    val_R = pin10.read_digital()
+    if val_C == 0:
+        if val_L == 0 and val_R == 1:
+            mecanumCar.Motor_Upper_L(1, 65)
+            mecanumCar.Motor_Lower_L(1, 65)
+            mecanumCar.Motor_Upper_R(0, 65)
+            mecanumCar.Motor_Lower_R(0, 65)
+        elif val_L == 1 and val_R == 0:
 
-    //  ------- 1. Verificación de obstáculos -------
-    distancia = read_distance()
+            mecanumCar.Motor_Upper_L(0, 65)
+            mecanumCar.Motor_Lower_L(0, 65)
+            mecanumCar.Motor_Upper_R(1, 65)
+            mecanumCar.Motor_Lower_R(1, 65)
+        else:
+            display.show(Sch1)
+            display.show(Sch2)
+            mecanumCar.Motor_Upper_L(0, 40)
+            mecanumCar.Motor_Lower_L(0, 40)
+            mecanumCar.Motor_Upper_R(0, 40)
+            mecanumCar.Motor_Lower_R(0, 40)
+            sleep(10)
+    else :
+        if val_L == 0 and val_R == 1:
 
-    if distancia < 15:
-        display.show(Image.SAD)
-        avoid_obstacle()
-        continue  # saltar seguidor de línea
+            mecanumCar.Motor_Upper_L(1, 65)
+            mecanumCar.Motor_Lower_L(1, 65)
+            mecanumCar.Motor_Upper_R(1, 45)
+            mecanumCar.Motor_Lower_R(1, 45)
+        elif val_L == 1 and val_R == 0:
 
-    //  ------- 2. SEGUIDOR DE LÍNEA (MEJORADO) -------
-    follow_line_proportional()
-    sleep(40)
+            mecanumCar.Motor_Upper_L(1, 45)
+            mecanumCar.Motor_Lower_L(1, 45)
+            mecanumCar.Motor_Upper_R(1, 80)
+            mecanumCar.Motor_Lower_R(1, 80)
+        else:
+
+            mecanumCar.Motor_Upper_L(1, 70)
+            mecanumCar.Motor_Lower_L(1, 70)
+            mecanumCar.Motor_Upper_R(1, 70)
+            mecanumCar.Motor_Lower_R(1, 70)

@@ -1,68 +1,42 @@
 from microbit import *
 import music
 import time
+import mecanumRobotV2
 
-# ==== Configuración de pines ====
-# Motores 
-A1 = pin8    # Motor izquierdo adelante
-A2 = pin12   # Motor izquierdo atrás
-B1 = pin14   # Motor derecho adelante
-B2 = pin15   # Motor derecho atrás
+# ===============================
+# CONFIGURACIÓN DE SENSORES
+# ===============================
 
-# Sensores de línea
+# Sensores de línea (DIGITALES)
 left_sensor = pin3
 right_sensor = pin10
 
-# Sensor ultrasónico HC-SR04 (obstáculos frontales)
+# Sensor ultrasónico HC-SR04
 trig = pin1
 echo = pin2
 
 
-# ==== Funciones de movimiento ====
-def stop():
-    A1.write_digital(0); A2.write_digital(0)
-    B1.write_digital(0); B2.write_digital(0)
-    display.show(Image.NO)
-
-def forward():
-    A1.write_digital(1); A2.write_digital(0)
-    B1.write_digital(1); B2.write_digital(0)
-    display.show(Image.ARROW_N)
-
-def backward():
-    A1.write_digital(0); A2.write_digital(1)
-    B1.write_digital(0); B2.write_digital(1)
-    display.show(Image.ARROW_S)
-
-def turn_left():
-    A1.write_digital(0); A2.write_digital(0)
-    B1.write_digital(1); B2.write_digital(0)
-    display.show(Image.ARROW_W)
-
-def turn_right():
-    A1.write_digital(1); A2.write_digital(0)
-    B1.write_digital(0); B2.write_digital(0)
-    display.show(Image.ARROW_E)
+# ===============================
+# FUNCIÓN: LEER DISTANCIA
+# ===============================
 
 def read_distance():
     """
-    Lectura del sensor ultrasónico en centímetros.
-    Devuelve: distancia en cm (int) o 999 si la lectura falla.
+    Devuelve distancia en cm.
+    Retorna 999 si no logra medir.
     """
-    # Pulso de disparo (10 microsegundos)
     trig.write_digital(0)
     time.sleep_us(5)
     trig.write_digital(1)
     time.sleep_us(10)
     trig.write_digital(0)
 
-    # Esperar el pulso de respuesta
     start = time.ticks_us()
-    timeout = start + 30000  # 30 ms máximo
+    timeout = start + 30000
 
     while echo.read_digital() == 0:
         if time.ticks_us() > timeout:
-            return 999  # Sin lectura
+            return 999
 
     start = time.ticks_us()
 
@@ -71,20 +45,36 @@ def read_distance():
             return 999
 
     end = time.ticks_us()
-
     duration = end - start
-    distance = int(duration / 58)  # Conversión a cm
 
-    return distance
+    return int(duration / 58)
 
+
+# ===============================
+# MOVIMIENTOS
+# ===============================
+
+def stop():
+    mecanumRobotV2.CarStop()
+
+def forward():
+    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_FORWARD)
+
+def backward():
+    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_BACK)
+
+def turn_left():
+    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_LEFT)
+
+def turn_right():
+    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_RIGHT)
+
+
+# ===============================
+# EVASIÓN DE OBSTÁCULOS
+# ===============================
 
 def avoid_obstacle():
-    """
-    Maniobra de evasión básica:
-    1. Se detiene
-    2. Retrocede un poco
-    3. Gira a la izquierda
-    """
     stop()
     sleep(200)
 
@@ -97,35 +87,41 @@ def avoid_obstacle():
     stop()
 
 
-# ==== Inicio del Programa ====
-display.scroll("SEGUIDOR")
+# ===============================
+# PROGRAMA PRINCIPAL
+# ===============================
+
+display.scroll("MECANUM AUTO")
 music.play(music.POWER_UP)
 
-# ==== BUCLE PRINCIPAL ====
 while True:
 
-    # ---- 1. Leer distancia y validar obstáculos ----
+    # ------- 1. Verificación de obstáculos -------
     distancia = read_distance()
 
-    if distancia < 15:    # Menos de 15 cm = obstáculo
+    if distancia < 15:
         display.show(Image.SAD)
         avoid_obstacle()
-        continue          # Saltar la lógica del seguidor
+        continue  # saltar seguidor de línea
 
-    # ---- 2. Lector de sensores de línea ----
+
+    # ------- 2. SEGUIDOR DE LÍNEA -------
     left_val = left_sensor.read_digital()
     right_val = right_sensor.read_digital()
 
     # Interpretación:
-    # Negro → 0
-    # Blanco → 1
+    # negro = 0 (línea detectada)
+    # blanco = 1 (fuera de línea)
 
     if left_val == 0 and right_val == 0:
         forward()
+
     elif left_val == 0 and right_val == 1:
         turn_left()
+
     elif left_val == 1 and right_val == 0:
         turn_right()
+
     else:
         stop()
 

@@ -1,53 +1,86 @@
 from microbit import *
 import music
-import mecanumRobotV2
+from keyes_mecanum_Car_V2 import *
+
+mecanumCar = Mecanum_Car_Driver_V2()
 
 # ===============================
-# FUNCIÓN: MOVIMIENTOS
+# FUNCIONES DE MOVIMIENTO
 # ===============================
 
 def stop():
-    mecanumRobotV2.CarStop()
+    mecanumCar.Motor_Upper_L(0, 0)
+    mecanumCar.Motor_Lower_L(0, 0)
+    mecanumCar.Motor_Upper_R(0, 0)
+    mecanumCar.Motor_Lower_R(0, 0)
     display.show(Image.NO)
 
 def forward():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_FORWARD)
+    mecanumCar.Motor_Upper_L(1, 80)
+    mecanumCar.Motor_Lower_L(1, 80)
+    mecanumCar.Motor_Upper_R(1, 80)
+    mecanumCar.Motor_Lower_R(1, 80)
     display.show(Image.ARROW_N)
 
 def backward():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_BACK)
+    mecanumCar.Motor_Upper_L(0, 80)
+    mecanumCar.Motor_Lower_L(0, 80)
+    mecanumCar.Motor_Upper_R(0, 80)
+    mecanumCar.Motor_Lower_R(0, 80)
     display.show(Image.ARROW_S)
 
 def left():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_LEFT)
+    # Giro puro hacia la izquierda
+    mecanumCar.Motor_Upper_L(0, 80)
+    mecanumCar.Motor_Lower_L(0, 80)
+    mecanumCar.Motor_Upper_R(1, 80)
+    mecanumCar.Motor_Lower_R(1, 80)
     display.show(Image.ARROW_W)
 
 def right():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_RIGHT)
+    # Giro puro hacia la derecha
+    mecanumCar.Motor_Upper_L(1, 80)
+    mecanumCar.Motor_Lower_L(1, 80)
+    mecanumCar.Motor_Upper_R(0, 80)
+    mecanumCar.Motor_Lower_R(0, 80)
     display.show(Image.ARROW_E)
 
 def forward_left():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_UP_LEFT)
+    # Adelante + giro suave a la izquierda
+    mecanumCar.Motor_Upper_L(1, 40)
+    mecanumCar.Motor_Lower_L(1, 40)
+    mecanumCar.Motor_Upper_R(1, 80)
+    mecanumCar.Motor_Lower_R(1, 80)
     display.show(Image.ARROW_NW)
 
 def forward_right():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_UP_RIGHT)
+    # Adelante + giro suave a la derecha
+    mecanumCar.Motor_Upper_L(1, 80)
+    mecanumCar.Motor_Lower_L(1, 80)
+    mecanumCar.Motor_Upper_R(1, 40)
+    mecanumCar.Motor_Lower_R(1, 40)
     display.show(Image.ARROW_NE)
 
 def backward_left():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_DOWN_LEFT)
+    mecanumCar.Motor_Upper_L(0, 40)
+    mecanumCar.Motor_Lower_L(0, 40)
+    mecanumCar.Motor_Upper_R(0, 80)
+    mecanumCar.Motor_Lower_R(0, 80)
     display.show(Image.ARROW_SW)
 
 def backward_right():
-    mecanumRobotV2.CarRun(mecanumRobotV2.RunState.RUN_DOWN_RIGHT)
+    mecanumCar.Motor_Upper_L(0, 80)
+    mecanumCar.Motor_Lower_L(0, 80)
+    mecanumCar.Motor_Upper_R(0, 40)
+    mecanumCar.Motor_Lower_R(0, 40)
     display.show(Image.ARROW_SE)
 
 
 # ===============================
-# INICIO DEL PROGRAMA
+# INICIO DEL SISTEMA
 # ===============================
 
-display.scroll("CONTROL BT")
+display.scroll("BT")
 music.play(music.POWER_UP)
 
 uart.init(baudrate=115200)
@@ -61,25 +94,16 @@ while True:
     if uart.any():
         cmd = uart.read().decode().strip()
 
-        if cmd == "F": 
-            forward()
-        elif cmd == "B": 
-            backward()
-        elif cmd == "L": 
-            left()
-        elif cmd == "R": 
-            right()
-        elif cmd == "S": 
-            stop()
-        elif cmd == "G": 
-            forward_left()
-        elif cmd == "I": 
-            forward_right()
-        elif cmd == "H": 
-            backward_left()
-        elif cmd == "J": 
-            backward_right()
+        if cmd == "F": forward()
+        elif cmd == "B": backward()
+        elif cmd == "L": left()
+        elif cmd == "R": right()
+        elif cmd == "S": stop()
+        elif cmd == "G": forward_left()
+        elif cmd == "I": forward_right()
+        elif cmd == "H": backward_left()
+        elif cmd == "J": backward_right()
         else:
             display.show("?")
 
-    sleep(40)
+    sleep(20)
